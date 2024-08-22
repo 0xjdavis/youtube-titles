@@ -1,60 +1,61 @@
 import streamlit as st
-import pandas as pd
 from googleapiclient.discovery import build
-import os
+import pandas as pd
+import re
 
-# Set up YouTube API client
-api_key = os.environ.get('youtube_key')
-youtube = build('youtube', 'v3', developerKey=api_key)
+# Function to extract Channel ID from URL
+def extract_channel_id(url):
+    # Regex pattern to match channel ID from URL
+    match = re.search(r'(channel/|user/|@)([A-Za-z0-9_-]+)', url)
+    if match:
+        return match.group(2)
+    return None
 
-def fetch_youtube_videos(channel_id):
+# Function to get videos from the YouTube channel
+api_key=st.secrets["youtube_key"]
+def get_youtube_videos(api_key, channel_id):
+    youtube = build('youtube', 'v3', developerKey=api_key)
+    request = youtube.search().list(
+        part="snippet",
+        channelId=channel_id,
+        maxResults=50,  # Adjust the number of videos retrieved
+        order="date"  # Sort by publication date
+    )
+    response = request.execute()
+
     videos = []
-    next_page_token = None
+    for item in response['items']:
+        if item['id']['kind'] == "youtube#video":
+            video_data = {
+                "Title": item['snippet']['title'],
+                "Published At": item['snippet']['publishedAt'],
+                "Video ID": item['id']['videoId']
+            }
+            videos.append(video_data)
     
-    while True:
-        request = youtube.search().list(
-            part='snippet',
-            channelId=channel_id,
-            maxResults=50,
-            order='date',
-            type='video',
-            pageToken=next_page_token
-        )
-        response = request.execute()
-        
-        for item in response['items']:
-            videos.append({
-                'title': item['snippet']['title'],
-                'video_id': item['id']['videoId'],
-                'published_at': item['snippet']['publishedAt']
-            })
-        
-        next_page_token = response.get('nextPageToken')
-        if not next_page_token:
-            break
-    
-    return videos
+    return pd.DataFrame(videos)
 
-# Streamlit app
-st.title('Law School Toolbox YouTube Videos')
+# Streamlit UI
+st.title("YouTube Channel Video List")
+st.write("Enter your YouTube API Key and Channel URL to get the video list.")
 
-# Law School Toolbox channel ID
-channel_id = 'UCnHBzCxvdkqGR_6iIJYD2Jw'
+api_key = st.text_input("YouTube API Key", type="password")
+channel_url = st.text_input("YouTube Channel URL", value="https://www.youtube.com/@LawSchoolToolbox")
 
-if api_key:
-    videos = fetch_youtube_videos(channel_id)
-    df = pd.DataFrame(videos)
-    df['published_at'] = pd.to_datetime(df['published_at']).dt.date
-    df = df.sort_values('published_at', ascending=False)
-    
-    st.write(f"Total videos: {len(df)}")
-    
-    # Display the table
-    st.dataframe(df[['title', 'published_at']], width=800)
-    
-    # Add clickable links to the videos
-    st.write("Click on a video title to watch:")
-    for _, row in df.iterrows():
-        st.write(f"[{row['title']}](https://www.youtube.com/watch?v={row['video_id']})")
-else:
-    st.error("YouTube API key not found. Please set the YOUTUBE_API_KEY environment variable.")
+if st.button("Get Videos"):
+    if api_key and channel_url:
+        channel_id = extract_channel_id(channel_url)
+        if channel_id:
+            videos_df = get_youtube_videos(api_key, channel_id)
+            st.dataframe(videos_df)
+            csv = videos_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="Download as CSV",
+                data=csv,
+                file_name="youtube_videos.csv",
+                mime="text/csv",
+            )
+        else:
+            st.error("Invalid YouTube Channel URL.")
+    else:
+        st.error("Please provide both API Key and Channel URL.")
