@@ -1,4 +1,4 @@
 streamlit
 requests
-googleapiclient.discovery
+google-api-python-client
 pandas
