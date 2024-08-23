@@ -2,6 +2,7 @@ import streamlit as st
 from googleapiclient.discovery import build
 import pandas as pd
 
+api_key=st.secrets["youtube_key"]
 # Function to get videos from the YouTube channel
 def get_youtube_videos(api_key, channel_id):
     youtube = build('youtube', 'v3', developerKey=api_key)
@@ -30,7 +31,7 @@ st.title("YouTube Channel Video List")
 st.write("Enter your YouTube API Key and Channel ID to get the video list.")
 
 api_key = st.text_input("YouTube API Key", type="password")
-channel_id = st.text_input("YouTube Channel ID", value="@LawSchoolToolbox")
+channel_id = st.text_input("YouTube Channel ID", value="UCAuUUnT6oDeKwE6v1NGQxug")
 
 if st.button("Get Videos"):
     if api_key and channel_id:
