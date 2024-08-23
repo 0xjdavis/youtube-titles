@@ -8,7 +8,7 @@ def get_youtube_videos(api_key, channel_id):
     request = youtube.search().list(
         part="snippet",
         channelId=channel_id,
-        maxResults=50,  # Adjust the number of videos retrieved
+        maxResults=10000,  # Adjust the number of videos retrieved
         order="date"  # Sort by publication date
     )
     response = request.execute()
