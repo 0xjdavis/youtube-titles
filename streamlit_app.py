@@ -38,7 +38,7 @@ def get_youtube_videos(api_key, channel_id):
 # Streamlit UI
 st.title("YouTube Channel Video List")
 
-api_key = st.text_input("YouTube API Key", type="password")
+api_key = st.secrets["youtube_key"] #st.text_input("YouTube API Key", type="password")
 channel_id = st.text_input("YouTube Channel ID", value="UCLRAP5fUb-OpHEiTryypa0g")
 
 if st.button("Get Videos"):
