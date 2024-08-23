@@ -3,6 +3,8 @@ from googleapiclient.discovery import build
 import pandas as pd
 
 api_key=st.secrets["youtube_key"]
+next_page_token = None
+
 # Function to get videos from the YouTube channel
 def get_youtube_videos(api_key, channel_id):
     youtube = build('youtube', 'v3', developerKey=api_key)
@@ -11,6 +13,7 @@ def get_youtube_videos(api_key, channel_id):
         channelId=channel_id,
         maxResults=700,  # Adjust the number of videos retrieved
         order="date"  # Sort by publication date
+        pageToken=next_page_token
     )
     response = request.execute()
 
