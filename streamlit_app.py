@@ -12,7 +12,7 @@ def get_youtube_videos(api_key, channel_id):
         part="snippet",
         channelId=channel_id,
         maxResults=700,  # Adjust the number of videos retrieved
-        order="date"  # Sort by publication date
+        order="date",  # Sort by publication date
         pageToken=next_page_token
     )
     response = request.execute()
